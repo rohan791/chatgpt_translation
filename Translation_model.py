@@ -470,3 +470,35 @@ axs[1].set_ylabel("Accuracy")
 axs[1].set_xlabel("Epoch")
 axs[1].legend(loc="lower right")
 plt.show()
+def translate(sentence):
+    # Encode input sentence
+    enc_tokens = eng_vect([sentence])
+    lookup = list(fra_vect.get_vocabulary())
+    start_sent, end_sent = "[start]", "[end]"
+    output_sent = [start_sent]
+    for i in range(seq_length):
+        # Prepare decoder input
+        vector = fra_vect([" ".join(output_sent)])
+        assert vector.shape == (1, seq_length + 1)
+        dec_tokens = vector[:, :-1]
+        assert dec_tokens.shape == (1, seq_length)
+        # Generate predictions
+        pred = model([enc_tokens, dec_tokens])
+        assert pred.shape == (1, seq_len, vocab_size_fr)
+        # Decode predicted token
+        word = lookup[np.argmax(pred[0, i, :])]
+        output_sent.append(word)
+        if word == end_sent:
+            break
+    return output_sent
+
+# Test the model on sample test cases
+test_count = 20
+for n in range(test_count):
+    eng_sent, fre_sent = random.choice(test_pairs)
+    translated = translate(eng_sent)
+    print(f"Test case: {n}")
+    print(f"English sentence: {eng_sent}")
+    print(f"Translated sentence: {' '.join(translated)}")
+    print(f"French sentence: {fre_sent}")
+    print()
